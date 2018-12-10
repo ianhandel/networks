@@ -1,0 +1,80 @@
+---
+title: "Tidygraph and ggraph"
+author: "Ian Handel"
+date: "10/12/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Packages we need
+```{r}
+library(tidyverse)
+library(tidygraph)
+library(ggraph)
+library(widyr)
+library(gapminder)
+set.seed(183)
+```
+
+### Loads some data and make correlations
+```{r}
+edges <- gapminder %>%
+  select(country, year, lifeExp) %>%
+  widyr::pairwise_cor(
+    item = country,
+    feature = year,
+    value = lifeExp
+  ) %>%
+  filter(correlation > quantile(correlation, 0.99))
+```
+
+
+```{r}
+edges
+```
+
+```{r}
+nodes <- gapminder %>%
+  select(country, continent) %>%
+  distinct()
+```
+
+```{r}
+nodes
+```
+
+
+```{r}
+net <- igraph::graph_from_data_frame(edges,
+  vertices = nodes
+) %>%
+  as_tbl_graph() %>%
+  mutate(cen = centrality_betweenness()) %>%
+  filter(!node_is_isolated())
+```
+
+```{r, fig.height=10, fig.width=12}
+ggraph(net) +
+  geom_edge_density(fill = "grey70") +
+  geom_edge_link(aes(alpha = correlation)) +
+  geom_node_point(aes(
+    colour = continent,
+    size = cen
+  )) +
+  geom_node_text(aes(label = name),
+    repel = TRUE,
+    check_overlap = TRUE
+  ) +
+  theme_graph() +
+  theme(legend.position = "none") +
+  labs(title = "Countries by pairwise correlation of Life Expectancy")
+```
+
+
+
+
+
+
