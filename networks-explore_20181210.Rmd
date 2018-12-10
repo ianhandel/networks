@@ -2,7 +2,7 @@
 title: "Tidygraph and ggraph"
 author: "Ian Handel"
 date: "10/12/2018"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
